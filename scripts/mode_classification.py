@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.colors as mcolors
 from matplotlib.patches import Rectangle
-
+from data_loader import load_onset
 
 def classify_from_harmonics(ts, variance_threshold=0.10):
     """
@@ -77,20 +77,14 @@ def classify_mode(save_data=False, plot=False, save_plot=False, variance_thresho
     $SCRATCH/onset/ONSET_{year}.nc4 (2001–2022)
 
     Output (optional):
-    $SCRATCH/final_nc4/smp.nc4
+    $SCRATCH/mode/smp.nc4
 
     Classification:
     0 = none (no clear cycle)
     1 = unimodal (annual cycle dominant)
     2 = bimodal (semi-annual cycle dominant)
     """
-    years = range(2001, 2023)
-    input_dir = os.path.expandvars("$SCRATCH/onset")
-    ds = xr.open_mfdataset(
-        [f"{input_dir}/ONSET_{year}.nc4" for year in years],
-        concat_dim='time',
-        combine='nested'
-    )
+    ds = load_onset()
     monthly_clim = ds["precipitation"].resample(time="1MS").mean()
     lats = ds.lat.values
     lons = ds.lon.values
@@ -109,7 +103,7 @@ def classify_mode(save_data=False, plot=False, save_plot=False, variance_thresho
     )
     ds["mode"] = mode_da
     if save_data:
-        output_dir = os.path.expandvars("$SCRATCH/final_nc4")
+        output_dir = os.path.expandvars("$SCRATCH/mode")
         os.makedirs(output_dir, exist_ok=True)
         output_file = f"{output_dir}/smp.nc4"
         if os.path.isfile(output_file):

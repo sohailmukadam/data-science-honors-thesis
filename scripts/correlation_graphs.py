@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from scipy import stats
+from data_loader import load_onset, load_sm, load_sst
 
 def make_correlation_df():
     """
@@ -40,12 +41,9 @@ def make_correlation_df():
     - Correlations are computed per grid cell across years.
     - Significance is based on whether 95% CI excludes zero.
     """
-    onset_files = sorted(glob.glob(os.path.expandvars("$SCRATCH/onset/*.nc4")))
-    precipitation = xr.open_mfdataset(onset_files, combine="by_coords").sel(lat=slice(0, 6), lon=slice(37, 48))
-    sm_files = sorted(glob.glob(os.path.expandvars("$SCRATCH/soil_moisture/*.nc4")))
-    sm = xr.open_mfdataset(sm_files, combine="by_coords").sel(lat=slice(0, 6), lon=slice(37, 48))
-    sst_files = sorted(glob.glob(os.path.expandvars("$SCRATCH/sst/*.nc4")))
-    sst = xr.open_mfdataset(sst_files, combine="by_coords").sel(lat=slice(-15, 5), lon=slice(45, 60))
+    precipitation = load_onset().sel(lat=slice(0, 6), lon=slice(37, 48))
+    sm = load_sm().sel(lat=slice(0, 6), lon=slice(37, 48))
+    sst = load_sst().sel(lat=slice(-15, 5), lon=slice(45, 60))
     years = np.arange(2001, 2023)
     sm_lat = sm["lat"].values
     sm_lon = sm["lon"].values

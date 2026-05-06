@@ -326,9 +326,9 @@ def process_sst_data(year):
     ds_cropped_daily_regridded.to_netcdf(output_file, mode="w", format="NETCDF4")
     print(f"Saved {output_file}")
 
-def process_era5_data(year, variables):
+def process_era5_land_data(year, variables):
     """
-    Process ERA5 atmospheric variables for a given year.
+    Process Land ERA5 atmospheric variables for a given year.
 
     This function:
     - Loads ERA5 data for specified variables.
@@ -341,7 +341,7 @@ def process_era5_data(year, variables):
 
     Parameters:
     year (int): Year to process
-    variables (list of str): ERA5 variable names (e.g., ["2t", "sp", "tcwv"])
+    variables (list of str): ERA5 variable names (e.g., ["2t", "2d", "cape", "tcc"])
 
     Input:
     ERA5 files from project data directory
@@ -354,7 +354,66 @@ def process_era5_data(year, variables):
     - Assumes hourly ERA5 data.
     - Output is daily averaged and regridded.
     """
-    output_dir = os.path.expandvars("$SCRATCH/era5")
+    output_dir = os.path.expandvars("$SCRATCH/era5_land")
+    os.makedirs(output_dir, exist_ok=True)
+    path_patterns = [f"*/ERA5/*/{year}*/*{var}*.nc" for var in variables]
+    ds_list = [xr.open_mfdataset(p, combine="by_coords") for p in path_patterns]
+    ds = xr.merge(ds_list)
+    ds = ds.rename({"latitude": "lat", "longitude": "lon"})
+    lat_min, lat_max = -10, 15
+    lon_min, lon_max = 30, 52
+    ds_cropped = ds.sel(
+        lat=slice(lat_max, lat_min),
+        lon=slice(lon_min, lon_max)
+    )
+    ds_cropped_daily = ds_cropped.resample(time="1D").mean()
+    target = xarray_regrid.Grid(
+        north=lat_max,
+        south=lat_min,
+        east=lon_max,
+        west=lon_min,
+        resolution_lat=1,
+        resolution_lon=1,
+    ).create_regridding_dataset(lat_name="lat", lon_name="lon")
+    ds_cropped_daily_regridded = ds_cropped_daily.regrid.stat(
+        target,
+        method="mean",
+        time_dim="time",
+        skipna=False
+    )
+    output_file = f"{output_dir}/ERA5_{year}.nc4"
+    ds_cropped_daily_regridded.to_netcdf(output_file, mode="w", format="NETCDF4")
+    print(f"Saved {output_file}")
+
+def process_era5_ocean_data(year, variables):
+    """
+    Process Ocean ERA5 atmospheric variables for a given year.
+
+    This function:
+    - Loads ERA5 data for specified variables.
+    - Merges them into a single dataset.
+    - Renames coordinates to standard names (lat, lon).
+    - Subsets to East Africa region.
+    - Aggregates hourly data to daily means.
+    - Regrids to a 1° x 1° grid.
+    - Saves output as a NetCDF file.
+
+    Parameters:
+    year (int): Year to process
+    variables (list of str): ERA5 variable names (e.g., ["tcwv", "msl", "10u", "10v"])
+
+    Input:
+    ERA5 files from project data directory
+
+    Output:
+    $SCRATCH/era5/ERA5_{year}.nc4
+
+    Notes:
+    - Variables must match ERA5 file naming conventions.
+    - Assumes hourly ERA5 data.
+    - Output is daily averaged and regridded.
+    """
+    output_dir = os.path.expandvars("$SCRATCH/era5_ocean")
     os.makedirs(output_dir, exist_ok=True)
     path_patterns = [f"*/ERA5/*/{year}*/*{var}*.nc" for var in variables]
     ds_list = [xr.open_mfdataset(p, combine="by_coords") for p in path_patterns]

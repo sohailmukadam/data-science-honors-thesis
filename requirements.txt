@@ -3,3 +3,8 @@ pandas
 numpy
 xarray-regrid
 regionmask
+cartopy
+scikit-learn
+matplotlib
+seaborn
+scipy

@@ -1,8 +1,11 @@
-# Scripts
+# Notebooks
 
 ## Overview
-This folder contains reusable Python scripts.
+This folder contains Jupyter notebooks used for exploratory data analysis, visualization, feature engineering, model development, and results analysis for the rainy season onset prediction project.
+
+The notebooks serve as the primary interface for experimentation and iterative analysis across the full machine learning pipeline.
 
 ## Notes
-- This folder provide clean, modular, and reproducible code. 
-- The code here supports workflows used in the notebooks folder. 
+- Notebooks are intended for exploration, analysis, and presentation of results rather than production execution.
+- Some notebooks may not be fully reproducible in their current state due to dependency on intermediate outputs or specific local environments.
+- The core logic used in these notebooks is implemented in the `scripts/` folder to ensure reproducibility and modularity.
